@@ -1,12 +1,21 @@
 <?php
-require_once __DIR__ . '/vendor/nikic/php-parser/lib/bootstrap.php';
-require_once __DIR__ . '/autoload_register.php';
+(@include_once __DIR__ . '/../vendor/autoload.php') || @include_once __DIR__ . '/../../../autoload.php';
+
+if (!class_exists('PHPParser_Parser')) {
+    file_put_contents('php://stderr', 'Could not find PHPParser_Parser. Did you install nikic/php-parser?' . "\n");
+    exit(1);
+}
+
+if (!class_exists('MySQL\\Converter\\RenameVisitor')) {
+    file_put_contents('php://stderr', 'Could not find the migration layer library ' . "\n");
+    exit(1);
+}
 
 $filePath = null;
 $saveFile = false;
 
 if ($argc > 3) {
-    file_put_contents('php://stderr', 'Usage: php convert.php [-w] <file>' . "\n");
+    file_put_contents('php://stderr', 'Usage: php convert-mysql.php [-w] <file>' . "\n");
     exit(1);
 }
 
@@ -19,7 +28,7 @@ for($i = 1; $i < $argc; ++$i) {
 }
 
 if(!$filePath) {
-    file_put_contents('php://stderr', 'Usage: php convert.php [-w] <file>' . "\n");
+    file_put_contents('php://stderr', 'Usage: php convert-mysql.php [-w] <file>' . "\n");
     exit(1);
 } elseif(!file_exists($filePath)) {
     file_put_contents('php://stderr', 'File "' . $filePath . '" not found.' . "\n");

@@ -20,6 +20,7 @@
     "suggest": {
         "nikic/php-parser": "for automatic converting"
     },
+    "bin": ["bin/convert-mysql.php"],
     "autoload": {
         "classmap": ["src/"]
     },
