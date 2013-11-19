@@ -1,5 +1,4 @@
-mysql-migration-layer
-=====================
+# MySQL migration layer
 
 [![Build Status](https://travis-ci.org/UFOMelkor/mysql-migration-layer.png?branch=master)](https://travis-ci.org/UFOMelkor/mysql-migration-layer)
 [![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/UFOMelkor/mysql-migration-layer/badges/quality-score.png?s=afd2b8429ba93522e6febb660100698bf59390d1)](https://scrutinizer-ci.com/g/UFOMelkor/mysql-migration-layer/)
@@ -9,3 +8,16 @@ mysql-migration-layer
 [![Latest Unstable Version](https://poser.pugx.org/dkplus/mysql-migration-layer/v/unstable.png)](https://packagist.org/packages/dkplus/mysql-migration-layer)
 
 Layer for migration from mysql to mysqli.
+
+## Installation
+
+### composer
+For composer documentation, please refer to
+[getcomposer.org](http://getcomposer.org/).
+
+`php composer.phar require dkplus/mysql-migration-layer`
+
+When asked for a version to install, type `0.1`.
+
+### Post-install
+After installing replace all mysql_*() calls with \MySQL\Proxy::*().
