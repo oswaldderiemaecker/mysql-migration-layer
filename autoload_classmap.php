@@ -1,6 +1,6 @@
 <?php
 return array(
-    'MySql\\Adapter' => __DIR__ . '/src/MySql/Adapter.php',
-    'MySql\\MySqli' => __DIR__ . '/src/MySql/MySqli.php',
-    'MySql\\Proxy' => __DIR__ . '/src/MySql/Proxy.php',
+    'MySQL\\Adapter' => __DIR__ . '/src/MySQL/Adapter.php',
+    'MySQL\\MySQLi' => __DIR__ . '/src/MySQL/MySQLi.php',
+    'MySQL\\Proxy' => __DIR__ . '/src/MySQL/Proxy.php',
 );

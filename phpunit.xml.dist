@@ -3,7 +3,7 @@
          convertWarningsToExceptions="true" verbose="true" stopOnFailure="false" processIsolation="false"
          backupGlobals="false" syntaxCheck="true">
     <testsuites>
-        <testsuite name="MySql Integration Tests">
+        <testsuite name="MySQL Integration Tests">
             <directory>./tests/MySQLTest</directory>
         </testsuite>
     </testsuites>

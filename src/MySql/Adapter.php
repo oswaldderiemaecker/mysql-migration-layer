@@ -1,5 +1,5 @@
 <?php
-namespace MySql;
+namespace MySQL;
 
 abstract class Adapter
 {

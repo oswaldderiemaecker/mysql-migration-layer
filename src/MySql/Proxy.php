@@ -1,5 +1,5 @@
 <?php
-namespace MySql;
+namespace MySQL;
 
 class Proxy
 {
@@ -15,7 +15,7 @@ class Proxy
     protected static function getAdapter()
     {
         if (! self::$adapter instanceof Adapter) {
-            self::$adapter = new MySqli();
+            self::$adapter = new MySQLi();
         }
         return self::$adapter;
     }

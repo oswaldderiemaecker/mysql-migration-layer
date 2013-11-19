@@ -1,8 +1,8 @@
 <?php
-namespace MySql;
+namespace MySQL;
 
 
-class MySqli extends Adapter
+class MySQLi extends Adapter
 {
     /** @var \mysqli */
     protected $lastLinkIdentifier = null;
@@ -36,7 +36,7 @@ class MySqli extends Adapter
         return @!is_null($link->client_info);
     }
 
-    protected function ensureMySqliResult($result)
+    protected function ensureMySQLiResult($result)
     {
         if (!$result instanceof \mysqli_result) {
             throw new \InvalidArgumentException('$result should be an instance of \\mysqli_result.');
@@ -74,7 +74,7 @@ class MySqli extends Adapter
 
     public function data_seek($result, $row_number)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         return $result->data_seek($row_number);
     }
@@ -134,7 +134,7 @@ class MySqli extends Adapter
                 break;
         }
 
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $result = $result->fetch_array($result_type);
         return $result === null
@@ -144,7 +144,7 @@ class MySqli extends Adapter
 
     public function fetch_assoc($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $result = $result->fetch_assoc();
         return $result === null
@@ -154,7 +154,7 @@ class MySqli extends Adapter
 
     public function fetch_field($result, $field_offset = null)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
 
         if ($field_offset !== null) {
@@ -209,7 +209,7 @@ class MySqli extends Adapter
 
     public function fetch_lengths($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         return $result->lengths === null
              ? false
@@ -218,7 +218,7 @@ class MySqli extends Adapter
 
     public function fetch_object($result, $class_name = 'stdClass', array $params = null)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         if (is_array($params)) {
             $result = $result->fetch_object($class_name, $params);
@@ -232,7 +232,7 @@ class MySqli extends Adapter
 
     public function fetch_row($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $result = $result->fetch_row();
         return $result === null
@@ -242,7 +242,7 @@ class MySqli extends Adapter
 
     public function field_flags($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $data    = $result->fetch_field_direct($field_offset);
         $flags   = $data->flags;
@@ -272,7 +272,7 @@ class MySqli extends Adapter
 
     public function field_len($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
         return $data->length;
@@ -280,7 +280,7 @@ class MySqli extends Adapter
 
     public function field_name($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
         return $data->name;
@@ -288,14 +288,14 @@ class MySqli extends Adapter
 
     public function field_seek($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         return $result->field_seek($field_offset);
     }
 
     public function field_table($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
         return $data->orgtable
@@ -313,7 +313,7 @@ class MySqli extends Adapter
 
     public function free_result($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
 
         if (@is_null($result->current_field)
             && @is_null($result->field_count)
@@ -387,14 +387,14 @@ class MySqli extends Adapter
 
     public function num_fields($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         return $result->field_count;
     }
 
     public function num_rows($result)
     {
-        $this->ensureMySqliResult($result);
+        $this->ensureMySQLiResult($result);
         /* @var $result \mysqli_result */
         return $result->num_rows;
     }

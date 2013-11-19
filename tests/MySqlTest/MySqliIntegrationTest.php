@@ -1,12 +1,12 @@
 <?php
 namespace MySQLTest;
 
-use MySql\Proxy;
+use MySQL\Proxy;
 use PHPUnit_Extensions_Database_TestCase as TestCase;
 
 require_once __DIR__ . '/TestAsset/FetchObjectClass.php';
 
-class MySqliIntegrationTest extends TestCase
+class MySQLiIntegrationTest extends TestCase
 {
     /** @var \PDO */
     private static $pdo;
@@ -310,8 +310,8 @@ class MySqliIntegrationTest extends TestCase
     public function testShouldUseOtherClassesToCreateResultWhenUsingFetchObject()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
-        $row    = Proxy::fetch_object($result, 'MySqlTest\\TestAsset\\FetchObjectClass', array(2));
-        $this->assertInstanceOf('MySqlTest\\TestAsset\\FetchObjectClass', $row);
+        $row    = Proxy::fetch_object($result, 'MySQLTest\\TestAsset\\FetchObjectClass', array(2));
+        $this->assertInstanceOf('MySQLTest\\TestAsset\\FetchObjectClass', $row);
         $this->assertEquals(1, $row->id);
         $this->assertSame(2, $row->constructorVar);
     }
