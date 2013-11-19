@@ -46,13 +46,11 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertSame(mysql_client_encoding(self::$mysqlLink), Proxy::client_encoding(self::$link));
     }
 
-    // @todo depends query, fetch_row
     public function testShouldSelectADatabase()
     {
         $this->assertCurrentDatabase($GLOBALS['DB_DBNAME']);
     }
 
-    // @todo depends query
     public function testShouldProvideAffectedRows()
     {
         Proxy::query('SELECT * FROM `select`', self::$link);
@@ -60,14 +58,12 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertSame(mysql_affected_rows(self::$mysqlLink), Proxy::affected_rows(self::$link));
     }
 
-    // @todo depends query
     public function testShouldProvideMinusOneForAffectedRowsAfterAnErrorOccured()
     {
         Proxy::query('foo', self::$link);
         $this->assertSame(-1, Proxy::affected_rows(self::$link));
     }
 
-    // @todo depends thread_id
     public function testShouldUseNewConnectionsAsDefault()
     {
         $threadId = Proxy::thread_id(self::$link);
@@ -75,7 +71,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertNotSame($threadId, Proxy::thread_id());
     }
 
-    // @todo depends thread_id
     public function testShouldCloseAConnection()
     {
         $this->connectProxyWithGlobalData();
@@ -98,7 +93,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertFalse(Proxy::create_db($GLOBALS['DB_DBNAME'], self::$link));
     }
 
-    // @todo depends fetch_object
     public function testShouldMoveTheInternalRowPointerWithDataSeek()
     {
         $result = Proxy::query('SELECT id FROM `select` ORDER BY id ASC', self::$link);
@@ -113,7 +107,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertFalse(Proxy::data_seek($result, 3));
     }
 
-    // @todo depends num_rows
     public function testShouldProvideDatabaseNames()
     {
         $result         = Proxy::list_dbs(self::$link);
@@ -135,7 +128,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertFalse(Proxy::db_query(__FUNCTION__, 'SELECT NULL', self::$link));
     }
 
-    // @todo depends select_db
     public function testShouldSwitchTheDatabaseWhenUsingDbQuery()
     {
         $this->createDb(__FUNCTION__);
@@ -156,28 +148,24 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertDatabaseNotExists(__FUNCTION__);
     }
 
-    // @todo depends query
     public function testShouldReturnZeroWhenUsingErrnoAndNoErrorOccured()
     {
         Proxy::query('SELECT NULL', self::$link);
         $this->assertSame(0, Proxy::errno(self::$link));
     }
 
-    // @todo depends query
     public function testShouldReturnNotZeroWhenUsingErrnoAndAnErrorOccured()
     {
         Proxy::query('foo', self::$link);
         $this->assertGreaterThan(0, Proxy::errno(self::$link));
     }
 
-    // @todo depends query
     public function testShouldReturnAnEmptyStringWhenUsingErrorAndNoErrorOccured()
     {
         Proxy::query('SELECT NULL', self::$link);
         $this->assertSame('', Proxy::error(self::$link));
     }
 
-    // @todo depends query
     public function testShouldReturnTheErrorMessageWhenUsingErrorAndAnErrorOccured()
     {
         Proxy::query('foo', self::$link);
@@ -195,7 +183,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertSame("Zak\\'s Laptop", Proxy::real_escape_string("Zak's Laptop", self::$link));
     }
 
-    // @todo depends query
     public function testShouldFetchNumericAndAssociativeVarsWhenUsingFetchArrayByDefault()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -205,7 +192,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertArrayHasKey('id', $row);
     }
 
-    // @todo depends query
     public function testShouldBeAbleFetchOnlyNumericArrayWhenUsingFetchArray()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -215,7 +201,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertArrayNotHasKey('id', $row);
     }
 
-    // @todo depends query
     public function testShouldBeAbleFetchOnlyAssociativeArrayWhenUsingFetchArray()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -225,14 +210,12 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertArrayHasKey('id', $row);
     }
 
-    // @todo depends query
     public function testShouldReturnFalseIfThereAreNoMoreRowsWhenUsingFetchArray()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=5000', self::$link);
         $this->assertFalse(Proxy::fetch_array($result));
     }
 
-    // @todo depends query
     public function testShouldIncreaseTheInternalRowPointerWhenUsingFetchArray()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -242,7 +225,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertNotSame($rowA[0], $rowB[0]);
     }
 
-    // @todo depends query
     public function testShouldFetchOnlyAssociativeVarsWhenUsingFetchAssoc()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -252,14 +234,12 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertArrayHasKey('id', $row);
     }
 
-    // @todo depends query
     public function testShouldReturnFalseIfThereAreNoMoreRowsWhenUsingFetchAssoc()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=5000', self::$link);
         $this->assertFalse(Proxy::fetch_assoc($result));
     }
 
-    // @todo depends query
     public function testShouldIncreaseTheInternalRowPointerWhenUsingFetchAssoc()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -269,7 +249,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertNotSame($rowA['id'], $rowB['id']);
     }
 
-    // @todo depends query
     public function testShouldFetchOnlyAssociativeVarsWhenUsingFetchRow()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -279,14 +258,12 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertArrayNotHasKey('id', $row);
     }
 
-    // @todo depends query
     public function testShouldReturnFalseIfThereAreNoMoreRowsWhenUsingFetchRow()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=5000', self::$link);
         $this->assertFalse(Proxy::fetch_row($result));
     }
 
-    // @todo depends query
     public function testShouldIncreaseTheInternalRowPointerWhenUsingFetchRow()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -296,7 +273,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertNotSame($rowA[0], $rowB[0]);
     }
 
-    // @todo depends query
     public function testShouldReturnAnInstanceofStdClassByDefaultWhenUsingFetchObject()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -304,7 +280,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertInstanceOf('stdClass', $row);
     }
 
-    // @todo depends query
     public function testShouldUseOtherClassesToCreateResultWhenUsingFetchObject()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
@@ -314,14 +289,12 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertSame(2, $row->constructorVar);
     }
 
-    // @todo depends query
     public function testShouldReturnFalseIfThereAreNoMoreRowsWhenUsingFetchObject()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=5000', self::$link);
         $this->assertFalse(Proxy::fetch_object($result));
     }
 
-    // @todo depends query
     public function testShouldIncreaseTheInternalRowPointerWhenUsingFetchObject()
     {
         $result = Proxy::query('SELECT id FROM `select`', self::$link);
@@ -331,7 +304,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertNotSame($rowA->id, $rowB->id);
     }
 
-    // @todo depends query
     public function testShouldReturnTheLengthsOfARowFromQueryResult()
     {
         $result  = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
@@ -343,14 +315,12 @@ class MySQLiIntegrationTest extends TestCase
         }
     }
 
-    // @todo depends query
     public function testShouldReturnFalseForTheLengthsOfARowFromQueryResultWhenNoResultHasBeenFetched()
     {
         $result = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
         $this->assertFalse(Proxy::fetch_lengths($result));
     }
 
-    // @todo depends query num_rows
     public function testShouldProvideMetadataUntilNoMoreMetadataAreAvailable()
     {
         $result = Proxy::query('SELECT * FROM `metadata`', self::$link);
@@ -367,7 +337,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertFalse(@Proxy::fetch_field($result, 5));
     }
 
-    // @todo depends query
     public function testShouldProvideSomeMetadataAboutAField()
     {
         $result = Proxy::query('SELECT * FROM `metadata`', self::$link);
@@ -530,7 +499,6 @@ class MySQLiIntegrationTest extends TestCase
         $this->assertEquals(0, $meta->zerofill);
     }
 
-    // @todo depends query
     public function testShouldProvideVariousFieldFlags()
     {
         $mysqlResult = mysql_query('SELECT * FROM metadata', self::$mysqlLink);

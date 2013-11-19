@@ -372,7 +372,10 @@ class MySQLi extends Adapter
 
     public function list_fields($database_name, $table_name, $link_identifier = null)
     {
-        return $this->query('SELECT * FROM `' . $database_name . '`.`' . $table_name . '` WHERE NULL != NULL', $link_identifier);
+        return $this->query(
+            'SELECT * FROM `' . $database_name . '`.`' . $table_name . '` WHERE NULL != NULL',
+            $link_identifier
+        );
     }
 
     public function list_processes($link_identifier)
