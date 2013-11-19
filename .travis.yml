@@ -11,6 +11,7 @@ before_script:
   - composer self-update
   - composer update --prefer-source --dev
   - mysql -e 'create database mysqltest;'
+  - mysql --user=travis mysqltest < ./data/schema.sql
   - mkdir -p ./build/logs
 
 script:
