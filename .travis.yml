@@ -11,6 +11,7 @@ before_script:
   - composer self-update
   - composer update --prefer-source --dev
   - mysql -e 'create database mysqltest;'
+  - mkdir -p ./build/logs
 
 script:
   - ./vendor/bin/phpunit --coverage-clover ./build/logs/clover.xml
