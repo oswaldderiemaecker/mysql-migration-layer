@@ -1,0 +1,23 @@
+{
+    "name":              "dkplus/mysql-migration-layer",
+    "description":       "Layer for migration from ext/mysql to ext/mysqli.",
+    "minimum-stability": "stable",
+    "keywords":          ["ext/mysql", "mysqli"],
+    "license":           "MIT",
+    "authors": [
+        {
+            "name":     "Oskar Bley",
+            "email":    "oskar@programming-php.net",
+            "homepage": "http://programming-php.net"
+        }
+    ],
+    "require-dev": {
+        "squizlabs/php_codesniffer": "1.4.*",
+        "satooshi/php-coveralls":    "~0.6",
+        "phpunit/phpunit":           "~3.7",
+        "phpunit/dbunit":            ">=1.2"
+    },
+    "autoload": {
+        "classmap": ["src/"]
+    }
+}
