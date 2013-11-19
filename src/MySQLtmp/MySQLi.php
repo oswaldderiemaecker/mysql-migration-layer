@@ -479,9 +479,3 @@ class MySQLi extends Adapter
         return $this->getLink($link_identifier)->query($link_identifier, MYSQLI_USE_RESULT);
     }
 }
-host_info;
-    }
-
-    public function get_proto_info($link_identifier = null)
-    {
-        return $this-
