@@ -51,4 +51,4 @@ abstract class Adapter
     abstract public function tablename($result, $i);
     abstract public function thread_id($link_identifier = null);
     abstract public function unbuffered_query($query, $link_identifier = null);
-} 
+}

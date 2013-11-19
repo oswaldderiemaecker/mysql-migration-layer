@@ -4,8 +4,6 @@ namespace MySQLTest;
 use MySQL\Proxy;
 use PHPUnit_Extensions_Database_TestCase as TestCase;
 
-require_once __DIR__ . '/TestAsset/FetchObjectClass.php';
-
 class MySQLiIntegrationTest extends TestCase
 {
     /** @var \PDO */

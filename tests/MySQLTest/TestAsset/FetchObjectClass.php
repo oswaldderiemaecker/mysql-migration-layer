@@ -1,7 +1,6 @@
 <?php
 namespace MySQLTest\TestAsset;
 
-
 class FetchObjectClass
 {
     public $constructorVar;
@@ -11,4 +10,4 @@ class FetchObjectClass
     {
         $this->constructorVar = $constructorVar;
     }
-} 
+}
