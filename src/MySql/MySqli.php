@@ -268,7 +268,14 @@ class MySqli extends Adapter
         $this->ensureMySqliResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
-        return $data['length'];
+        if ($data->charsetnr != 33) {
+            return $data->length;
+        }
+        var_dump(($field_offset + 1) . ' ' .$data->name . ': ' . $this->fetch_field($result, $field_offset)->type);
+        if ($this->fetch_field($result, $field_offset)->type != 'string') {
+            return $data->length;
+        }
+        return $data->length / 3;
     }
 
     public function field_name($result, $field_offset)
@@ -276,7 +283,7 @@ class MySqli extends Adapter
         $this->ensureMySqliResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
-        return isset($data['name']) ? $data['name'] : $data['orgname'];
+        return $data->name;
     }
 
     public function field_seek($result, $field_offset)

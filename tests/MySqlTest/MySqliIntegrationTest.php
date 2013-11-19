@@ -525,10 +525,52 @@ class MySqliIntegrationTest extends TestCase
             'not_null unique_key unsigned zerofill',
             'not_null multiple_key',
             'not_null enum',
-            'not_null unsigned zerofill binary timestamp'
+            'not_null binary timestamp'
         );
-        foreach ($flags as $i => $each) {
-            $this->assertEquals($each, Proxy::field_flags($result, $i));
+        foreach ($flags as $i => $expected) {
+            $this->assertEquals($expected, Proxy::field_flags($result, $i));
+        }
+    }
+
+    public function testShouldProvideFieldLength()
+    {
+        $result  = Proxy::query('SELECT * FROM metadata_types', self::$link);
+        $lengths = array(4, 6, 9, 11, 20, 11, 12, 22, 22, 1, 1, 20, 10, 19, 19, 10, 4, 5, 55, 255, 65535, 16777215, -1,
+                         1, 50, 255, 16777215, 65535, -1, 3, 3, -1, -1, -1, -1, -1, -1, -1, -1);
+
+        foreach ($lengths as $i => $expected) {
+            if ($expected != Proxy::field_len($result, $i)) {
+                var_dump(($i+1) . ': ' . $expected . ' != ' . Proxy::field_len($result, $i));
+            }
+            //$this->assertEquals($expected, Proxy::field_len($result, $i));
+        }
+        $this->assertFalse(true);
+    }
+
+    public function testShouldProvideFieldName()
+    {
+        $result  = Proxy::query('SELECT * FROM metadata', self::$link);
+        $lengths = array('id', 'blob', 'number', 'text', 'enum', 'timestamp');
+
+        foreach ($lengths as $i => $expected) {
+            $this->assertEquals($expected, Proxy::field_name($result, $i));
+        }
+    }
+
+    public function testShouldProvideAnAliasAsFieldName()
+    {
+        $result  = Proxy::query('SELECT `id` AS `alias` FROM metadata', self::$link);
+        $this->assertEquals('alias', Proxy::field_name($result, 0));
+    }
+
+    public function testMysql()
+    {
+        @mysql_connect('localhost', 'root', '');
+        mysql_select_db('mysqltest');
+        $result = mysql_query('SELECT * FROM metadata_types');
+        $i = 0;
+        for ($i = 0; $i < 39; ++$i) {
+            var_dump(($i + 1) . ': ' . mysql_field_len($result, $i));
         }
     }
 
