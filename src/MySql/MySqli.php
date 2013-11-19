@@ -31,6 +31,11 @@ class MySqli extends Adapter
         throw new \BadMethodCallException('There has been no connection established.');
     }
 
+    protected function isConnected(\mysqli $link)
+    {
+        return @!is_null($link->client_info);
+    }
+
     protected function ensureMySqliResult($result)
     {
         if (!$result instanceof \mysqli_result) {
@@ -153,7 +158,9 @@ class MySqli extends Adapter
         /* @var $result \mysqli_result */
 
         if ($field_offset !== null) {
-            $this->field_seek($result, $field_offset);
+            if (!$this->field_seek($result, $field_offset)) {
+                return false;
+            }
         }
 
         $mysqliMetadata = $result->fetch_field();
@@ -268,14 +275,7 @@ class MySqli extends Adapter
         $this->ensureMySqliResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
-        if ($data->charsetnr != 33) {
-            return $data->length;
-        }
-        var_dump(($field_offset + 1) . ' ' .$data->name . ': ' . $this->fetch_field($result, $field_offset)->type);
-        if ($this->fetch_field($result, $field_offset)->type != 'string') {
-            return $data->length;
-        }
-        return $data->length / 3;
+        return $data->length;
     }
 
     public function field_name($result, $field_offset)
@@ -298,22 +298,39 @@ class MySqli extends Adapter
         $this->ensureMySqliResult($result);
         /* @var $result \mysqli_result */
         $data = $result->fetch_field_direct($field_offset);
-        return isset($data['table']) ? $data['table'] : $data['orgtable'];
+        return $data->orgtable
+               ? $data->orgtable
+               : false;
     }
 
     public function field_type($result, $field_offset)
     {
-        $this->ensureMySqliResult($result);
-        /* @var $result \mysqli_result */
-        $data = $result->fetch_field_direct($field_offset);
-        return $data['type'];
+        $data = $this->fetch_field($result, $field_offset);
+        return $data
+             ? $data->type
+             : false;
     }
 
     public function free_result($result)
     {
         $this->ensureMySqliResult($result);
+
+        if (@is_null($result->current_field)
+            && @is_null($result->field_count)
+            && @is_null($result->lengths)
+            && @is_null($result->num_rows)
+            && @is_null($result->type)
+        ) {
+            return false;
+        }
+
         /* @var $result \mysqli_result */
-        return $result->free();
+        $result->free();
+        return @is_null($result->current_field)
+            && @is_null($result->field_count)
+            && @is_null($result->lengths)
+            && @is_null($result->num_rows)
+            && @is_null($result->type);
     }
 
     public function get_client_info()
@@ -323,7 +340,7 @@ class MySqli extends Adapter
 
     public function get_host_info($link_identifier = null)
     {
-        return $this->getLink($link_identifier)->client_info;
+        return $this->getLink($link_identifier)->host_info;
     }
 
     public function get_proto_info($link_identifier = null)
@@ -338,7 +355,9 @@ class MySqli extends Adapter
 
     public function info($link_identifier = null)
     {
-        return $this->getLink($link_identifier)->info;
+        return $this->getLink($link_identifier)->info === null
+             ? false
+             : $this->getLink($link_identifier)->info;
     }
 
     public function insert_id($link_identifier = null)
@@ -346,22 +365,19 @@ class MySqli extends Adapter
         return $this->getLink($link_identifier)->insert_id;
     }
 
-    // @todo test
     public function list_dbs($link_identifier = null)
     {
         return $this->query('SHOW DATABASES', $link_identifier);
     }
 
-    // @todo test
     public function list_fields($database_name, $table_name, $link_identifier = null)
     {
-        return $this->query('SHOW COLUMNS FROM `' . $database_name . '`.`' . $table_name . '`', $link_identifier);
+        return $this->query('SELECT * FROM `' . $database_name . '`.`' . $table_name . '` WHERE NULL != NULL', $link_identifier);
     }
 
-    // @todo überarbeiten!!!
     public function list_processes($link_identifier)
     {
-        return $this->getLink($link_identifier)->thread_id;
+        return $this->query('SHOW PROCESSLIST');
     }
 
     public function list_tables($database, $link_identifier = null)
@@ -394,7 +410,10 @@ class MySqli extends Adapter
 
     public function ping($link_identifier = null)
     {
-        return $this->getLink($link_identifier)->ping();
+        $link_identifier = $this->getLink($link_identifier);
+        return $this->isConnected($link_identifier)
+             ? $link_identifier->ping()
+             : false;
     }
 
     public function query($query, $link_identifier = null)
@@ -407,9 +426,24 @@ class MySqli extends Adapter
         return $this->getLink($link_identifier)->real_escape_string($unescaped_string);
     }
 
-    // @todo see http://de2.php.net/manual/en/function.mysql-result.php field parameter
     public function result($result, $row, $field = 0)
     {
+        if (strpos($field, '.') !== false) {
+            $tableName = substr($field, 0, strpos($field, '.'));
+            $fieldName = substr($field, strpos($field, '.') + 1);
+            for ($i = 0; $i < $result->field_count; ++$i) {
+                $fieldData = $result->fetch_field_direct($i);
+                if ($fieldData->orgtable == $tableName
+                    && $fieldData->orgname == $fieldName
+                ) {
+                    $field = $i;
+                    break;
+                }
+            }
+            if (!is_int($field)) {
+                return false;
+            }
+        }
         $this->data_seek($result, $row);
         $result = $this->fetch_array($result);
         return $result[$field];

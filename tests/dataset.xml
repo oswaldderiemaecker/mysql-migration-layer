@@ -15,5 +15,6 @@
                 <field name="text">baz</field>
             </row>
         </table_data>
+        <table_data name="insert_without_ai"></table_data>
     </database>
 </mysqldump>

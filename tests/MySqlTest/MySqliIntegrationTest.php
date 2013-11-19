@@ -11,6 +11,7 @@ class MySqliIntegrationTest extends TestCase
     /** @var \PDO */
     private static $pdo;
     private static $link;
+    private static $mysqlLink;
     private $connection;
 
     protected function getConnection()
@@ -24,6 +25,10 @@ class MySqliIntegrationTest extends TestCase
             self::$link = $this->connectProxyWithGlobalData();
             Proxy::set_charset($GLOBALS['DB_CHARSET'], self::$link);
             Proxy::select_db($GLOBALS['DB_DBNAME'], self::$link);
+
+            self::$mysqlLink = mysql_connect($GLOBALS['DB_HOST'], $GLOBALS['DB_USER'], $GLOBALS['DB_PASSWD']);
+            mysql_set_charset($GLOBALS['DB_CHARSET'], self::$mysqlLink);
+            mysql_select_db($GLOBALS['DB_DBNAME'], self::$mysqlLink);
         }
 
         if ($this->connection === null) {
@@ -40,7 +45,7 @@ class MySqliIntegrationTest extends TestCase
 
     public function testShouldSetTheCharacterEncoding()
     {
-        $this->assertSame($GLOBALS['DB_CHARSET'], Proxy::client_encoding());
+        $this->assertSame(mysql_client_encoding(self::$mysqlLink), Proxy::client_encoding(self::$link));
     }
 
     // @todo depends query, fetch_row
@@ -52,8 +57,9 @@ class MySqliIntegrationTest extends TestCase
     // @todo depends query
     public function testShouldProvideAffectedRows()
     {
-        $result = Proxy::query('SELECT * FROM `select`', self::$link);
-        $this->assertSame(3, Proxy::affected_rows(self::$link));
+        Proxy::query('SELECT * FROM `select`', self::$link);
+        mysql_query('SELECT * FROM `select`', self::$mysqlLink);
+        $this->assertSame(mysql_affected_rows(self::$mysqlLink), Proxy::affected_rows(self::$link));
     }
 
     // @todo depends query
@@ -184,6 +190,11 @@ class MySqliIntegrationTest extends TestCase
     {
         $this->connectProxyWithGlobalData();
         $this->assertSame("Zak\\'s Laptop", Proxy::escape_string("Zak's Laptop"));
+    }
+
+    public function testShouldEscapeStrings()
+    {
+        $this->assertSame("Zak\\'s Laptop", Proxy::real_escape_string("Zak's Laptop", self::$link));
     }
 
     // @todo depends query
@@ -337,10 +348,8 @@ class MySqliIntegrationTest extends TestCase
     // @todo depends query
     public function testShouldReturnFalseForTheLengthsOfARowFromQueryResultWhenNoResultHasBeenFetched()
     {
-        $result  = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
-        $lengths = Proxy::fetch_lengths($result);
-
-        $this->assertFalse($lengths);
+        $result = Proxy::query('SELECT id FROM `select` WHERE id=1', self::$link);
+        $this->assertFalse(Proxy::fetch_lengths($result));
     }
 
     // @todo depends query num_rows
@@ -351,6 +360,13 @@ class MySqliIntegrationTest extends TestCase
             $this->assertInstanceOf('stdClass', Proxy::fetch_field($result));
         }
         $this->assertFalse(Proxy::fetch_field($result));
+    }
+
+    public function testShouldReturnFalseOnUnknownOffsetWhenFetchingFields()
+    {
+        $query  = 'SELECT `id`, `text` FROM `select`';
+        $result = Proxy::query($query, self::$link);
+        $this->assertFalse(@Proxy::fetch_field($result, 5));
     }
 
     // @todo depends query
@@ -476,14 +492,15 @@ class MySqliIntegrationTest extends TestCase
 
     public function testShouldProvideTheTypeForAField()
     {
-        $result = Proxy::query('SELECT * FROM `metadata_types`', self::$link);
-        $this->assertCurrentDatabase($GLOBALS['DB_DBNAME']);
+        $query = 'SELECT * FROM `metadata_types`';
+        $mysqlResult = mysql_query($query, self::$mysqlLink);
+        $result      = Proxy::query('SELECT * FROM `metadata_types`', self::$link);
 
-        $expectedTypes = array('int', 'int', 'int', 'int', 'int', 'real', 'real', 'real', 'real', 'int', 'int', 'int',
-            'date', 'datetime', 'timestamp', 'time', 'year', 'string', 'string', 'blob', 'blob', 'blob', 'blob',
-            'string', 'string', 'blob', 'blob', 'blob', 'blob', 'string', 'string', 'geometry',  'geometry', 'geometry',
-            'geometry', 'geometry', 'geometry', 'geometry', 'geometry',
-        );
+        $expectedTypes = array();
+        while ($each = mysql_fetch_field($mysqlResult)) {
+            $expectedTypes[] = $each->type;
+        }
+        $this->assertGreaterThan(0, count($expectedTypes));
 
         foreach ($expectedTypes as $each) {
             $meta = Proxy::fetch_field($result);
@@ -515,18 +532,19 @@ class MySqliIntegrationTest extends TestCase
         $this->assertEquals(0, $meta->zerofill);
     }
 
+    // @todo depends query
     public function testShouldProvideVariousFieldFlags()
     {
-        $result = Proxy::query('SELECT * FROM metadata', self::$link);
+        $mysqlResult = mysql_query('SELECT * FROM metadata', self::$mysqlLink);
+        $result      = Proxy::query('SELECT * FROM metadata', self::$link);
 
-        $flags = array(
-            'not_null primary_key auto_increment',
-            'blob binary',
-            'not_null unique_key unsigned zerofill',
-            'not_null multiple_key',
-            'not_null enum',
-            'not_null binary timestamp'
-        );
+        $flags = array();
+        $i     = 0;
+        while ($each = @mysql_field_flags($mysqlResult, $i++)) {
+            $flags[] = $each;
+        }
+        $this->assertGreaterThan(0, count($flags));
+
         foreach ($flags as $i => $expected) {
             $this->assertEquals($expected, Proxy::field_flags($result, $i));
         }
@@ -534,25 +552,30 @@ class MySqliIntegrationTest extends TestCase
 
     public function testShouldProvideFieldLength()
     {
-        $result  = Proxy::query('SELECT * FROM metadata_types', self::$link);
-        $lengths = array(4, 6, 9, 11, 20, 11, 12, 22, 22, 1, 1, 20, 10, 19, 19, 10, 4, 5, 55, 255, 65535, 16777215, -1,
-                         1, 50, 255, 16777215, 65535, -1, 3, 3, -1, -1, -1, -1, -1, -1, -1, -1);
-
-        foreach ($lengths as $i => $expected) {
-            if ($expected != Proxy::field_len($result, $i)) {
-                var_dump(($i+1) . ': ' . $expected . ' != ' . Proxy::field_len($result, $i));
-            }
-            //$this->assertEquals($expected, Proxy::field_len($result, $i));
+        $mysqlResult     = mysql_query('SELECT * FROM metadata_types', self::$mysqlLink);
+        $expectedLengths = array();
+        $i               = 0;
+        while ($each = @mysql_field_len($mysqlResult, $i++)) {
+            $expectedLengths[] = $each;
         }
-        $this->assertFalse(true);
+        $this->assertGreaterThan(0, count($expectedLengths));
+
+        $result = Proxy::query('SELECT * FROM metadata_types', self::$link);
+        foreach ($expectedLengths as $i => $expected) {
+            $this->assertSame($expected, Proxy::field_len($result, $i));
+        }
     }
 
     public function testShouldProvideFieldName()
     {
-        $result  = Proxy::query('SELECT * FROM metadata', self::$link);
-        $lengths = array('id', 'blob', 'number', 'text', 'enum', 'timestamp');
+        $mysqlResult   = mysql_query('SELECT id, text FROM metadata', self::$mysqlLink);
+        for ($i = 0; $i < 2; ++$i) {
+            $expectedNames[] = mysql_field_name($mysqlResult, $i);
+        }
+        $this->assertGreaterThan(0, count($expectedNames));
 
-        foreach ($lengths as $i => $expected) {
+        $result  = Proxy::query('SELECT id, text FROM metadata', self::$link);
+        foreach ($expectedNames as $i => $expected) {
             $this->assertEquals($expected, Proxy::field_name($result, $i));
         }
     }
@@ -563,15 +586,238 @@ class MySqliIntegrationTest extends TestCase
         $this->assertEquals('alias', Proxy::field_name($result, 0));
     }
 
-    public function testMysql()
+    public function testShouldMoveResultPointerToaSpecifiedFieldOffset()
     {
-        @mysql_connect('localhost', 'root', '');
-        mysql_select_db('mysqltest');
-        $result = mysql_query('SELECT * FROM metadata_types');
-        $i = 0;
-        for ($i = 0; $i < 39; ++$i) {
-            var_dump(($i + 1) . ': ' . mysql_field_len($result, $i));
+        $result = Proxy::query('SELECT `id`, `text` FROM `select`', self::$link);
+        Proxy::field_seek($result, 1);
+        $this->assertSame('text', Proxy::fetch_field($result)->name);
+    }
+
+    public function testShouldKnowTheTableOfAField()
+    {
+        $result = Proxy::query('SELECT * FROM `select`', self::$link);
+        $this->assertSame('select', Proxy::field_table($result, 0));
+    }
+
+    public function testShouldReturnFalseOnAnUnknownFieldOffsetWhenRetrievingTheTable()
+    {
+        $result = Proxy::query('SELECT `id` FROM `select`', self::$link);
+        $this->assertFalse(@Proxy::field_table($result, 1));
+    }
+
+    public function testShouldKnowTheTypeOfAField()
+    {
+        $query       = 'SELECT * FROM `metadata_types`';
+        $mysqlResult = mysql_query($query, self::$mysqlLink);
+
+        $expectedTypes = array();
+        $i             = 0;
+        while ($each = @mysql_field_type($mysqlResult, $i++)) {
+            $expectedTypes[] = $each;
         }
+        $this->assertGreaterThan(0, count($expectedTypes));
+
+        $result = Proxy::query($query, self::$link);
+        foreach ($expectedTypes as $i => $each) {
+            $this->assertSame($each, Proxy::field_type($result, $i));
+        }
+    }
+
+    public function testShouldReturnFalseOnAnUnknownFieldOffsetWhenRetrievingTheFieldType()
+    {
+        $result = Proxy::query('SELECT `id` FROM `select`', self::$link);
+        $this->assertFalse(@Proxy::field_type($result, 5));
+    }
+
+    public function testShouldFreeMemoryOnlyOnce()
+    {
+        $result = Proxy::query('SELECT * FROM `select`', self::$link);
+        $this->assertTrue(Proxy::free_result($result));
+        $this->assertFalse(Proxy::free_result($result));
+    }
+
+    public function testShouldProvideClientInfo()
+    {
+        $this->assertSame(mysql_get_client_info(), Proxy::get_client_info());
+    }
+
+    public function testShouldProvideHostInfo()
+    {
+        $this->assertSame(mysql_get_host_info(self::$mysqlLink), Proxy::get_host_info(self::$link));
+    }
+
+    public function testShouldProvideProtocolInfo()
+    {
+        $this->assertSame(mysql_get_proto_info(self::$mysqlLink), Proxy::get_proto_info(self::$link));
+    }
+
+    public function testShouldProvideServerInfo()
+    {
+        $this->assertSame(mysql_get_server_info(self::$mysqlLink), Proxy::get_server_info(self::$link));
+    }
+
+    public function testShouldProvideInfoAboutTheLastQuery()
+    {
+        $query = "UPDATE `select` SET `text`='foo' WHERE id = 500";
+        mysql_query($query, self::$mysqlLink);
+        Proxy::query($query, self::$link);
+        $this->assertSame(mysql_info(self::$mysqlLink), Proxy::info(self::$link));
+    }
+
+    public function testShouldProvideFalseAsInfoAboutTheLastQueryIfNoInsertUpdateQueryHasBeenDone()
+    {
+        Proxy::query("SELECT * FROM `select`", self::$link);
+        $this->assertFalse(Proxy::info(self::$link));
+    }
+
+    public function testShouldReturnTheInsertIdAfterAnAutoIncrementInsert()
+    {
+        Proxy::query("INSERT INTO `select` (text) VALUES ('foo')", self::$link);
+        $this->assertGreaterThan(0, Proxy::insert_id(self::$link));
+    }
+
+    public function testShouldReturnZeroAfterAnSelect()
+    {
+        Proxy::query("SELECT * FROM `select`", self::$link);
+        $this->assertSame(0, Proxy::insert_id(self::$link));
+    }
+
+    public function testShouldReturnZeroAsInsertIdAfterNonAutoIncrementInsert()
+    {
+        Proxy::query("INSERT INTO `insert_without_ai` (id, text) VALUES (1, 'foo')", self::$link);
+        $this->assertSame(0, Proxy::insert_id(self::$link));
+    }
+
+    public function testShouldListDatabases()
+    {
+        $mysqlResult       = mysql_list_dbs(self::$mysqlLink);
+        $expectedDatabases = array();
+        for ($i = 0; $i < mysql_num_rows($mysqlResult); ++$i) {
+            $expectedDatabases[] = mysql_db_name($mysqlResult, $i);
+        }
+
+        $result    = Proxy::list_dbs(self::$link);
+        $databases = array();
+        for ($i = 0; $i < Proxy::num_rows($result); ++$i) {
+            $databases[] = Proxy::db_name($result, $i);
+        }
+
+        $this->assertCount(0, array_diff($expectedDatabases, $databases));
+        $this->assertCount(0, array_diff($databases, $expectedDatabases));
+    }
+
+    public function testShouldListFieldsFromATable()
+    {
+        $mysqlResult    = mysql_list_fields($GLOBALS['DB_DBNAME'], 'metadata', self::$mysqlLink);
+        $expectedFields = array();
+        $i              = 0;
+        while ($each = @mysql_field_name($mysqlResult, $i++)) {
+            $expectedFields[] = $each;
+        }
+
+        $result = Proxy::list_fields($GLOBALS['DB_DBNAME'], 'metadata', self::$link);
+        $fields = array();
+        $i      = 0;
+        while ($each = @Proxy::field_name($result, $i++)) {
+            $fields[] = $each;
+        }
+
+        $this->assertSame($expectedFields, $fields);
+    }
+
+    public function testShouldListProcesses()
+    {
+        $mysqlResult       = mysql_list_processes(self::$mysqlLink);
+        $expectedProcesses = array();
+        while ($each = mysql_fetch_array($mysqlResult)) {
+            $expectedProcesses[] = $each;
+        }
+        $this->assertGreaterThan(0, count($expectedProcesses));
+
+        $result    = Proxy::list_processes(self::$link);
+        $processes = array();
+        while ($each = Proxy::fetch_array($result)) {
+            $processes[] = $each;
+        }
+
+        $this->assertSame(count($expectedProcesses), count($processes));
+
+        foreach (array_keys($expectedProcesses[0]) as $each) {
+            $this->assertArrayHasKey($each, $processes[0]);
+        }
+    }
+
+    public function testShouldListTablesFromADatabase()
+    {
+        $mysqlResult    = mysql_list_tables($GLOBALS['DB_DBNAME'], self::$mysqlLink);
+        $expectedTables = array();
+        for ($i = 0; $i < mysql_num_rows($mysqlResult); ++$i) {
+            $expectedTables[] = mysql_tablename($mysqlResult, $i);
+        }
+        $this->assertGreaterThan(0, count($expectedTables));
+
+        $result = Proxy::list_tables($GLOBALS['DB_DBNAME'], self::$link);
+        $tables = array();
+        for ($i = 0; $i < Proxy::num_rows($result); ++$i) {
+            $tables[] = Proxy::tablename($result, $i);
+        }
+
+        $this->assertSame($expectedTables, $tables);
+    }
+
+    public function testShouldKnowTheNumberOfFieldsFromAQueryResult()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select`', self::$link);
+        $this->assertSame(2, Proxy::num_fields($result));
+    }
+
+    public function testShouldKnowTheNumberOfRowsFromAQueryResult()
+    {
+        $result = Proxy::query('SELECT * FROM `select`', self::$link);
+        $this->assertSame(3, Proxy::num_rows($result));
+    }
+
+    public function testShouldProvideStats()
+    {
+        $this->assertSame(mysql_stat(self::$mysqlLink), Proxy::stat(self::$link));
+    }
+
+    public function testShouldPingToTheServer()
+    {
+        $this->connectProxyWithGlobalData();
+        $this->assertTrue(Proxy::ping());
+        Proxy::close();
+        $this->assertFalse(Proxy::ping());
+    }
+
+    public function testShouldReturnASingleFieldFromAResultDefinedByOffset()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select` ORDER BY id ASC', self::$link);
+        $this->assertSame('bar', Proxy::result($result, 1, 1));
+    }
+
+    public function testShouldReturnASingleFieldFromAResultDefinedByFieldName()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select` ORDER BY id ASC', self::$link);
+        $this->assertSame('bar', Proxy::result($result, 1, 'text'));
+    }
+
+    public function testShouldReturnASingleFieldFromAResultDefinedByFieldAndTableName()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select` ORDER BY id ASC', self::$link);
+        $this->assertSame('bar', Proxy::result($result, 1, 'select.text'));
+    }
+
+    public function testShouldReturnASingleFieldFromAResultDefinedByImplicitDefinition()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select` ORDER BY id ASC', self::$link);
+        $this->assertSame('2', Proxy::result($result, 1));
+    }
+
+    public function testShouldReturnFalseIfASingleFieldCouldNotBeFoundInAResult()
+    {
+        $result = Proxy::query('SELECT id, text FROM `select` ORDER BY id ASC', self::$link);
+        $this->assertFalse(Proxy::result($result, 1, 'foo.bar'));
     }
 
     public function assertCurrentDatabase($databaseName)
