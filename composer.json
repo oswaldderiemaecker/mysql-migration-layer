@@ -1,8 +1,8 @@
 {
     "name":              "dkplus/mysql-migration-layer",
-    "description":       "Layer for migration from ext/mysql to ext/mysqli.",
+    "description":       "Layer for migration from mysql to mysqli.",
     "minimum-stability": "stable",
-    "keywords":          ["ext/mysql", "mysqli"],
+    "keywords":          ["mysql", "mysqli"],
     "license":           "MIT",
     "authors": [
         {
