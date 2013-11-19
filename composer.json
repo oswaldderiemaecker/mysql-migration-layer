@@ -11,6 +11,10 @@
             "homepage": "http://programming-php.net"
         }
     ],
+    "require": {
+        "php": ">=5.3",
+        "ext-mysqli": "*"
+    },
     "require-dev": {
         "squizlabs/php_codesniffer": "1.4.*",
         "satooshi/php-coveralls":    "~0.6",
@@ -18,13 +22,14 @@
         "phpunit/dbunit":            ">=1.2"
     },
     "suggest": {
-        "nikic/php-parser": "for automatic converting"
+        "nikic/php-parser": "If you want to use automatic converting"
     },
     "bin": ["bin/convert-mysql.php"],
     "autoload": {
         "classmap": ["src/"]
     },
-    "require": {
-        "nikic/php-parser": "0.9.4"
+    "archive": {
+        "exclude": ["!vendor", "data", "tests", ".travis.yml", "phpcs.xml", "phpunit.travis.xml", "phpunit.xml.dist",
+            "vendor/satooshi", "vendor/phpunit"]
     }
 }
