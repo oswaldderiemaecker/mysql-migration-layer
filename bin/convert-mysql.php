@@ -35,8 +35,7 @@ if(!$filePath) {
     exit(1);
 }
 
-$file = __DIR__ . '/index.php';
-$code = file_get_contents($file);
+$code = file_get_contents($filePath);
 
 $parser    = new PHPParser_Parser(new PHPParser_Lexer());
 $printer   = new PHPParser_PrettyPrinter_Default();
