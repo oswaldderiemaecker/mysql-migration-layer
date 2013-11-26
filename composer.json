@@ -16,6 +16,7 @@
         "ext-mysqli": "*"
     },
     "require-dev": {
+        "ext-mysql": "*",
         "squizlabs/php_codesniffer": "1.4.*",
         "satooshi/php-coveralls":    "~0.6",
         "phpunit/phpunit":           "~3.7",

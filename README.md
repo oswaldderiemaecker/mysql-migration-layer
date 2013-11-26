@@ -20,7 +20,7 @@ For composer documentation, please refer to
 When asked for a version to install, type `0.1`.
 
 ### Post-install
-After installing replace all mysql_*() calls with \MySQL\Proxy::*().
+After installing replace all `mysql_*()` calls with `\MySQL\Proxy::*()`.
 
 You can do this step automatically. Therefore you must also install [nikic/php-parser](https://github.com/nikic/PHP-Parser):
 
