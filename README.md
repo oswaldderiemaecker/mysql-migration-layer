@@ -15,18 +15,24 @@ Layer for migration from mysql to mysqli.
 For composer documentation, please refer to
 [getcomposer.org](http://getcomposer.org/).
 
-`php composer.phar require dkplus/mysql-migration-layer`
-
-When asked for a version to install, type `0.1`.
+```shell
+php composer.phar require dkplus/mysql-migration-layer
+```
 
 ### Post-install
 After installing replace all `mysql_*()` calls with `\MySQL\Proxy::*()`.
 
 You can do this step automatically. Therefore you must also install [nikic/php-parser](https://github.com/nikic/PHP-Parser):
 
-`php composer.phar require nikic/php-parser`
+```shell
+php composer.phar require nikic/php-parser
+```
 
-Then you can run the converter by calling `php vendor/bin/convert-mysql.php [-w] <file>`.
+Then you can run the converter by calling:
+
+```shell
+php vendor/bin/convert-mysql.php [-w] <file>
+```
 
 Run the script with the path of the PHP file you wish to convert as argument. This will print the converted source code to STDOUT.
 
@@ -35,5 +41,8 @@ You can add the `-w` switch if you want to override the original file with the c
 In case of any error, an error message is written to STDERR and the script exits with a return code of 1.
 
 Use find to convert a whole directory recursively:
-`find <directory> -name "*.php" -exec php "vendor/bin/convert-mysql.php" -w "{}" \;`
+
+```shell
+find <directory> -name "*.php" -exec php "vendor/bin/convert-mysql.php" -w "{}" \;
+```
 
