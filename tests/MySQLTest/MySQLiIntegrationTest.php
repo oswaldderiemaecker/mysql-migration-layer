@@ -745,7 +745,8 @@ class MySQLiIntegrationTest extends TestCase
 
     public function testShouldProvideStats()
     {
-        $this->assertSame(mysql_stat(self::$mysqlLink), Proxy::stat(self::$link));
+        $expectedStats = preg_replace('/[0-9]+/', '[0-9]+\.?[0-9]*', mysql_stat(self::$mysqlLink));
+        $this->assertRegExp('/' . $expectedStats . '/', Proxy::stat(self::$link));
     }
 
     public function testShouldPingToTheServer()
