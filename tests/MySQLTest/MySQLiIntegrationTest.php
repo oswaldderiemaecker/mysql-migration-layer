@@ -745,7 +745,9 @@ class MySQLiIntegrationTest extends TestCase
 
     public function testShouldProvideStats()
     {
-        $this->assertSame(mysql_stat(self::$mysqlLink), Proxy::stat(self::$link));
+        $expectedStats = mysql_stat(self::$mysqlLink);
+        $expectedStats = substr($expectedStats, 0, strrpos($expectedStats, ':'));
+        $this->assertStringStartsWith($expectedStats, Proxy::stat(self::$link));
     }
 
     public function testShouldPingToTheServer()
