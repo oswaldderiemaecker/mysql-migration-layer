@@ -8,6 +8,8 @@ SET time_zone = "+00:00";
 
 CREATE DATABASE `mysqltest`;
 
+USE mysqltest;
+
 CREATE TABLE IF NOT EXISTS `metadata` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `blob` blob,
